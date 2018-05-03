@@ -1,0 +1,11 @@
+name: nes
+version: 0.0.1
+author: Rongjian Zhang <pd4d10@gmail.com>
+description: NES Emulator
+homepage: https://github.com/pd4d10/nes
+
+environment:
+  sdk: ">=1.24.0 <2.0.0"
+
+dev_dependencies:
+  test: ^0.12.33
