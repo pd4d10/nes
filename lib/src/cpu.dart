@@ -1,41 +1,13 @@
-import 'utils.dart';
 import 'memory.dart';
-
-// http://wiki.nesdev.com/w/index.php/CPU_status_flag_behavior
-class ProcessorStatus {
-  int data;
-
-  read() => data;
-  write(int value) => data = value & 0xff;
-
-  _setDataByBit(int n, int value) => data = setBit(data, n, value);
-
-  get carry => getBit(data, 0);
-  set carry(int value) => _setDataByBit(0, value);
-  get zero => getBit(data, 1);
-  set zero(int value) => _setDataByBit(1, value);
-  get interrupt => getBit(data, 2);
-  set interrupt(int value) => _setDataByBit(2, value);
-  get decimal => getBit(data, 3);
-  set decimal(int value) => _setDataByBit(3, value);
-  get overflow => getBit(data, 6);
-  set overflow(int value) => _setDataByBit(6, value);
-  get negative => getBit(data, 7);
-  set negative(int value) => _setDataByBit(7, value);
-
-  setZeroAndNegative(int value) {
-    zero = value == 0 ? 1 : 0;
-    negative = value >> 7 & 1;
-  }
-}
+import 'cpu_status.dart';
+import 'cpu_stack.dart';
 
 class CPU {
-  int regA;
-  int regX;
-  int regY;
-  int regPC;
-  var flags = new ProcessorStatus();
-  int regSP;
+  int regA; // Accumulator
+  int regX; // Index Register X
+  int regY; // Index Register Y
+  int regPC; // Program Counter
+  CpuStatus status = new CpuStatus();
 
   int opAddr;
   int opValue;
@@ -43,9 +15,12 @@ class CPU {
 
   Map<int, List> mapper = {};
 
-  var mem = new Memory();
+  Memory mem;
+  CpuStack stack;
 
-  CPU() {
+  CPU(this.mem) {
+    stack = new CpuStack(mem);
+
     mapper = {
       // Operation code: [Addressing mode, instruction, size, cycles]
       0x69: [immediate, adc, 2, 2],
@@ -237,63 +212,89 @@ class CPU {
     }
   }
 
-  bcs() => ifFlagSetPC(flags.carry, 1);
-  bcc() => ifFlagSetPC(flags.carry, 0);
-  beq() => ifFlagSetPC(flags.zero, 1);
-  bne() => ifFlagSetPC(flags.zero, 0);
-  bvs() => ifFlagSetPC(flags.overflow, 1);
-  bvc() => ifFlagSetPC(flags.overflow, 0);
-  bmi() => ifFlagSetPC(flags.negative, 1);
-  bpl() => ifFlagSetPC(flags.negative, 0);
+  bcs() => ifFlagSetPC(status.carry, 1);
+  bcc() => ifFlagSetPC(status.carry, 0);
+  beq() => ifFlagSetPC(status.zero, 1);
+  bne() => ifFlagSetPC(status.zero, 0);
+  bvs() => ifFlagSetPC(status.overflow, 1);
+  bvc() => ifFlagSetPC(status.overflow, 0);
+  bmi() => ifFlagSetPC(status.negative, 1);
+  bpl() => ifFlagSetPC(status.negative, 0);
+
+  clc() => status.carry = 0;
+  cli() => status.interrupt = 0;
+  cld() => status.decimal = 0;
+  clv() => status.overflow = 0;
+  sec() => status.carry = 1;
+  sei() => status.interrupt = 1;
+  sed() => status.decimal = 1;
 
   cmp() {
     var tmp = regA - opValue;
-    flags.carry = tmp >= 0 ? 1 : 0;
-    flags.setZeroAndNegative(tmp);
+    status.carry = tmp >= 0 ? 1 : 0;
+    status.setZeroAndNegative(tmp);
   }
 
   cpx() {
     var tmp = regX - opValue;
-    flags.carry = tmp >= 0 ? 1 : 0;
-    flags.setZeroAndNegative(tmp);
+    status.carry = tmp >= 0 ? 1 : 0;
+    status.setZeroAndNegative(tmp);
   }
 
   cpy() {
     var tmp = regY - opValue;
-    flags.carry = tmp >= 0 ? 1 : 0;
-    flags.setZeroAndNegative(tmp);
+    status.carry = tmp >= 0 ? 1 : 0;
+    status.setZeroAndNegative(tmp);
   }
 
   inc() {
     mem.write(opAddr, ++opValue);
-    flags.setZeroAndNegative(opValue);
+    status.setZeroAndNegative(opValue);
   }
 
   dec() {
     mem.write(opAddr, --opValue);
-    flags.setZeroAndNegative(opValue);
+    status.setZeroAndNegative(opValue);
   }
 
-  inx() => flags.setZeroAndNegative(++regX);
-  iny() => flags.setZeroAndNegative(++regY);
-  dex() => flags.setZeroAndNegative(--regX);
-  dey() => flags.setZeroAndNegative(--regY);
+  inx() => status.setZeroAndNegative(++regX);
+  iny() => status.setZeroAndNegative(++regY);
+  dex() => status.setZeroAndNegative(--regX);
+  dey() => status.setZeroAndNegative(--regY);
 
-  lda() => flags.setZeroAndNegative(regA = opValue);
-  ldx() => flags.setZeroAndNegative(regX = opValue);
-  ldy() => flags.setZeroAndNegative(regY = opValue);
+  jmp() => regPC = opAddr;
+  jsr() {
+    stack.push(regPC);
+    regPC = opAddr;
+  }
+
+  lda() => status.setZeroAndNegative(regA = opValue);
+  ldx() => status.setZeroAndNegative(regX = opValue);
+  ldy() => status.setZeroAndNegative(regY = opValue);
+
+  nop() {}
+
+  pha() => stack.push(regA);
+  php() => stack.push(status.read());
+  pla() => status.setZeroAndNegative(regA = stack.pop());
+  plp() => status.write(stack.pop());
+  rts() => regPC = stack.pop() + 1;
+  rti() {
+    status.write(stack.pop());
+    regPC = stack.pop16();
+  }
 
   sta() => mem.write(opAddr, regA);
   stx() => mem.write(opAddr, regX);
   sty() => mem.write(opAddr, regY);
 
-  tax() => flags.setZeroAndNegative(regX = regA);
-  tay() => flags.setZeroAndNegative(regY = regA);
-  txa() => flags.setZeroAndNegative(regA = regX);
-  tya() => flags.setZeroAndNegative(regA = regY);
+  tax() => status.setZeroAndNegative(regX = regA);
+  tay() => status.setZeroAndNegative(regY = regA);
+  txa() => status.setZeroAndNegative(regA = regX);
+  tya() => status.setZeroAndNegative(regA = regY);
 
-  tsx() => flags.setZeroAndNegative(regX = regSP);
-  txs() => regSP = regX;
+  tsx() => status.setZeroAndNegative(regX = stack.point);
+  txs() => stack.point = regX;
 
   //
   emulate() {

@@ -1,7 +1,9 @@
 import 'src/cpu.dart';
+import 'src/memory.dart';
 import 'src/ppu.dart';
 
 main() {
-  var a = 1;
-  print(++a);
+  var ppu = new PPU();
+  var mem = new Memory(ppu);
+  var cpu = new CPU(mem);
 }
