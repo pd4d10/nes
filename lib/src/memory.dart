@@ -13,12 +13,14 @@ class Memory {
   }
 
   read16(int address) {
-    return;
+    return read(address + 1) >> 8 | read(address);
   }
 
   write(int address, int value) {
     address &= 0xff;
   }
 
-  write16(int address, int value) {}
+  write16(int address, int value) {
+    // write(address, value);
+  }
 }

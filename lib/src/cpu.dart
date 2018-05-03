@@ -38,6 +38,7 @@ class CPU {
   int regSP;
 
   int opAddr;
+  int opValue;
   int opCode;
 
   Map<int, List> mapper = {};
@@ -230,7 +231,57 @@ class CPU {
   // http://www.6502.org/tutorials/6502opcodes.html
   adc() {}
 
-  bcs() {}
+  ifFlagSetPC(int flag, int value) {
+    if (flag == value) {
+      regPC = opAddr;
+    }
+  }
+
+  bcs() => ifFlagSetPC(flags.carry, 1);
+  bcc() => ifFlagSetPC(flags.carry, 0);
+  beq() => ifFlagSetPC(flags.zero, 1);
+  bne() => ifFlagSetPC(flags.zero, 0);
+  bvs() => ifFlagSetPC(flags.overflow, 1);
+  bvc() => ifFlagSetPC(flags.overflow, 0);
+  bmi() => ifFlagSetPC(flags.negative, 1);
+  bpl() => ifFlagSetPC(flags.negative, 0);
+
+  cmp() {
+    var tmp = regA - opValue;
+    flags.carry = tmp >= 0 ? 1 : 0;
+    flags.setZeroAndNegative(tmp);
+  }
+
+  cpx() {
+    var tmp = regX - opValue;
+    flags.carry = tmp >= 0 ? 1 : 0;
+    flags.setZeroAndNegative(tmp);
+  }
+
+  cpy() {
+    var tmp = regY - opValue;
+    flags.carry = tmp >= 0 ? 1 : 0;
+    flags.setZeroAndNegative(tmp);
+  }
+
+  inc() {
+    mem.write(opAddr, ++opValue);
+    flags.setZeroAndNegative(opValue);
+  }
+
+  dec() {
+    mem.write(opAddr, --opValue);
+    flags.setZeroAndNegative(opValue);
+  }
+
+  inx() => flags.setZeroAndNegative(++regX);
+  iny() => flags.setZeroAndNegative(++regY);
+  dex() => flags.setZeroAndNegative(--regX);
+  dey() => flags.setZeroAndNegative(--regY);
+
+  lda() => flags.setZeroAndNegative(regA = opValue);
+  ldx() => flags.setZeroAndNegative(regX = opValue);
+  ldy() => flags.setZeroAndNegative(regY = opValue);
 
   sta() => mem.write(opAddr, regA);
   stx() => mem.write(opAddr, regX);
