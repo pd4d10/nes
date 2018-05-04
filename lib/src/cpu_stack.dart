@@ -1,9 +1,10 @@
 import 'memory.dart';
 
-// https://wiki.nesdev.com/w/index.php/Stack
-// Descending, empty
+/// Stack: Descending, empty, $0100-$01ff
+///
+/// https://wiki.nesdev.com/w/index.php/Stack
 class CpuStack {
-  final _offset = 0x100; // $0100-$01ff
+  final _offset = 0x100;
   Memory _mem;
   int point;
 

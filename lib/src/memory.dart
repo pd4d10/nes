@@ -2,7 +2,7 @@ import 'ppu.dart';
 
 class Memory {
   PPU ppu;
-  Memory(this.ppu);
+  // Memory(this.ppu);
 
   List<int> internalRAM = new List(0x800);
   List<int> saveRAM = new List(0x2000);
