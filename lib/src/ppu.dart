@@ -1,24 +1,12 @@
-class PPU {
-  // Registers
-  int ppuctrl;
-  int ppumask;
-  int ppustatus;
-  int oamaddr;
-  int oamdata;
-  int ppuscroll;
-  int ppuaddr;
-  int ppudata;
+import 'ppu_register.dart';
 
-  readRegisters(int address) {
-    return [
-      ppuctrl,
-      ppumask,
-      ppustatus,
-      oamaddr,
-      oamdata,
-      ppuscroll,
-      ppuaddr,
-      ppudata
-    ][address % 8];
+// https://wiki.nesdev.com/w/index.php/PPU_registers
+class PPU {
+  PpuRegister reg;
+
+  PPU(this.reg);
+
+  renderBackground() {
+    reg.vblankStarted;
   }
 }
