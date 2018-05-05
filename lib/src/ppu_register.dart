@@ -22,7 +22,7 @@ class PpuRegister {
   /// Base nametable address
   ///
   /// (0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00)
-  get nameTableAddr => 0x2000 + (ppuctrl & 3) * 0x400;
+  // get name => ppuctrl & 3;
 
   /// VRAM address increment per CPU read/write of PPUDATA
   ///

@@ -1,7 +1,7 @@
-import 'ppu.dart';
+import 'ppu_register.dart';
 
 class Memory {
-  PPU ppu;
+  PpuRegister reg;
   // Memory(this.ppu);
 
   List<int> internalRAM = new List(0x800);
@@ -13,7 +13,7 @@ class Memory {
       return internalRAM[address % 0x800];
     }
     if (address < 0x4000) {
-      return ppu.readRegisters(address);
+      return reg.read(address);
     }
 
     // IO Registers
