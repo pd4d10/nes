@@ -5,7 +5,6 @@ import 'cpu_instruction.dart';
 
 class CPU {
   int opAddr;
-  int opCode;
   int extraCycle;
 
   CpuRegister reg = new CpuRegister();
@@ -20,18 +19,22 @@ class CPU {
 
   //
   emulate() {
-    opCode = mem.read(reg.pc);
-    var operators = ins.mapper[opCode];
+    var opcode = mem.read(reg.pc);
+    var operators = ins.mapper[opcode];
     if (operators == null) {
-      throw 'No such operators: $opCode';
+      throw 'Opcode invalid: $opcode';
     }
-    Function() addressing = operators[0];
-    Function() instruction = operators[1];
+    Function() getAddress = operators[0];
+    Function() executeInstruction = operators[1];
     int size = operators[2];
     int cycle = operators[3];
 
-    ins.opAddr = addressing();
-    instruction();
+    var addr = getAddress();
+    if (addr != null) {
+      ins.addr = addr;
+    }
+
+    executeInstruction();
     extraCycle = 0;
     reg.pc += size;
   }

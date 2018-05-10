@@ -9,7 +9,7 @@ import 'cpu_stack.dart';
 // http://obelisk.me.uk/6502/reference.html
 // http://www.6502.org/tutorials/6502opcodes.html
 class CpuInstruction {
-  int opAddr;
+  int addr;
   Map<int, List> mapper;
   CpuRegister _reg;
   CpuStack _stack;
@@ -174,7 +174,7 @@ class CpuInstruction {
   }
 
   adc() {
-    var tmp = _reg.a + _reg.carry + _mem.read(opAddr);
+    var tmp = _reg.a + _reg.carry + _mem.read(addr);
     _reg.carry = tmp > 0xff;
     // TODO: status.overflow =
     _reg.setZN(_reg.a = tmp);
@@ -182,9 +182,9 @@ class CpuInstruction {
 
   sbc() {}
 
-  and() => _reg.setZN(_reg.a &= _mem.read(opAddr));
-  eor() => _reg.setZN(_reg.a ^= _mem.read(opAddr));
-  ora() => _reg.setZN(_reg.a |= _mem.read(opAddr));
+  and() => _reg.setZN(_reg.a &= _mem.read(addr));
+  eor() => _reg.setZN(_reg.a ^= _mem.read(addr));
+  ora() => _reg.setZN(_reg.a |= _mem.read(addr));
 
   asl() {}
   lsr() {}
@@ -193,7 +193,7 @@ class CpuInstruction {
 
   ifFlagSetPC(int flag, int value) {
     if (flag == value) {
-      _reg.pc = opAddr;
+      _reg.pc = addr;
     }
   }
 
@@ -207,7 +207,7 @@ class CpuInstruction {
   bpl() => ifFlagSetPC(_reg.negative, 0);
 
   bit() {
-    var tmp = _mem.read(opAddr);
+    var tmp = _mem.read(addr);
     _reg.zero = tmp & _reg.a == 0;
     _reg.overflow = getBit(tmp, 6);
     _reg.negative = getBit(tmp, 7);
@@ -229,32 +229,32 @@ class CpuInstruction {
   sed() => _reg.decimal = 1;
 
   cmp() {
-    var tmp = _reg.a - _mem.read(opAddr);
+    var tmp = _reg.a - _mem.read(addr);
     _reg.carry = tmp >= 0 ? 1 : 0;
     _reg.setZN(tmp);
   }
 
   cpx() {
-    var tmp = _reg.x - _mem.read(opAddr);
+    var tmp = _reg.x - _mem.read(addr);
     _reg.carry = tmp >= 0 ? 1 : 0;
     _reg.setZN(tmp);
   }
 
   cpy() {
-    var tmp = _reg.y - _mem.read(opAddr);
+    var tmp = _reg.y - _mem.read(addr);
     _reg.carry = tmp >= 0 ? 1 : 0;
     _reg.setZN(tmp);
   }
 
   inc() {
-    var tmp = _mem.read(opAddr) + 1;
-    _mem.write(opAddr, tmp);
+    var tmp = _mem.read(addr) + 1;
+    _mem.write(addr, tmp);
     _reg.setZN(tmp);
   }
 
   dec() {
-    var tmp = _mem.read(opAddr) - 1;
-    _mem.write(opAddr, tmp);
+    var tmp = _mem.read(addr) - 1;
+    _mem.write(addr, tmp);
     _reg.setZN(tmp);
   }
 
@@ -263,15 +263,15 @@ class CpuInstruction {
   dex() => _reg.setZN(--_reg.x);
   dey() => _reg.setZN(--_reg.y);
 
-  jmp() => _reg.pc = opAddr;
+  jmp() => _reg.pc = addr;
   jsr() {
     _stack.push(_reg.pc);
-    _reg.pc = opAddr;
+    _reg.pc = addr;
   }
 
-  lda() => _reg.setZN(_reg.a = _mem.read(opAddr));
-  ldx() => _reg.setZN(_reg.x = _mem.read(opAddr));
-  ldy() => _reg.setZN(_reg.y = _mem.read(opAddr));
+  lda() => _reg.setZN(_reg.a = _mem.read(addr));
+  ldx() => _reg.setZN(_reg.x = _mem.read(addr));
+  ldy() => _reg.setZN(_reg.y = _mem.read(addr));
 
   nop() {}
 
@@ -286,9 +286,9 @@ class CpuInstruction {
     _reg.pc = _stack.pop16();
   }
 
-  sta() => _mem.write(opAddr, _reg.a);
-  stx() => _mem.write(opAddr, _reg.x);
-  sty() => _mem.write(opAddr, _reg.y);
+  sta() => _mem.write(addr, _reg.a);
+  stx() => _mem.write(addr, _reg.x);
+  sty() => _mem.write(addr, _reg.y);
 
   tax() => _reg.setZN(_reg.x = _reg.a);
   tay() => _reg.setZN(_reg.y = _reg.a);
