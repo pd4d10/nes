@@ -22,7 +22,7 @@ class PpuRegister {
   /// Base nametable address
   ///
   /// (0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00)
-  // get name => ppuctrl & 3;
+  get nameTableIndex => ppuctrl & 3;
 
   /// VRAM address increment per CPU read/write of PPUDATA
   ///
@@ -35,7 +35,8 @@ class PpuRegister {
   get spritePatternTableAddr => getBitBool(ppuctrl, 3) ? 0x1000 : 0;
 
   /// Background pattern table address (0: $0000; 1: $1000)
-  get bgPatternTableAddr => getBitBool(ppuctrl, 4) ? 0x1000 : 0;
+  // get bgPatternTableOffset => getBitBool(ppuctrl, 4) ? 0x1000 : 0;
+  get bgPatternTableIndex => getBit(ppuctrl, 4);
 
   /// Sprite size (0: 8x8; 1: 8x16)
   get spriteHeight => getBitBool(ppuctrl, 5) ? 16 : 8;
@@ -58,7 +59,7 @@ class PpuRegister {
   get showLeftSprite => getBitBool(ppumask, 2);
 
   /// Show background
-  get showBg => getBitBool(ppumask, 3);
+  get showBackground => getBitBool(ppumask, 3);
 
   /// Show sprites
   get showSprite => getBitBool(ppumask, 4);
@@ -80,6 +81,7 @@ class PpuRegister {
   /// evaluation and cleared at dot 1 (the second dot) of the
   /// pre-render line.
   get spriteOverflow => getBitBool(ppustatus, 5);
+  set spriteOverflow(bool b) => setBitBool(ppustatus, 5, b);
 
   /// Sprite 0 Hit. Set when a nonzero pixel of sprite 0 overlaps
   /// a nonzero background pixel; cleared at dot 1 of the pre-render

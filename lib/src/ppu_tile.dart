@@ -25,7 +25,7 @@ class PpuTile {
     var tileIndex = _tileY << 4 | _tileX;
 
     for (var y = 0; y < _tileSize; y++) {
-      var offset = _ppu.reg.bgPatternTableAddr | tileIndex << 4 | y;
+      var offset = _ppu.reg.bgPatternTableOffset | tileIndex << 4 | y;
       var low = _ppu.mem.read(offset);
       var high = _ppu.mem.read(offset | 8);
 

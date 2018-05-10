@@ -19,7 +19,7 @@ class SpriteInfo {
   bool front;
   bool vFlip;
   bool hFlip;
-  int palette;
+  int attr;
 
   SpriteInfo.fromMem(data) {
     y = data[0];
@@ -27,7 +27,7 @@ class SpriteInfo {
     var byte2 = data[2];
     x = data[3];
 
-    palette = byte2 & 3;
+    attr = byte2 & 3;
     front = getBitBool(byte2, 5);
     hFlip = getBitBool(byte2, 6);
     vFlip = getBitBool(byte2, 7);

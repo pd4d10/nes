@@ -1,7 +1,11 @@
-// import 'utils.dart';
+import 'utils.dart';
 
 // https://wiki.nesdev.com/w/index.php/PPU_memory_map
 class PpuMemory {
+  var patternTables = matrix(2, 0x1000);
+  var nameTables = matrix(4, 0x3c0);
+  var attrTables = matrix(4, 0x40);
+  
   List<int> _tables = new List(0x3000);
   List<int> _palette = new List(0x20);
   // PpuMemory() {}

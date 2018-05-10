@@ -17,9 +17,10 @@ class PPU {
   PpuOam _oam = new PpuOam();
   var _tiles = matrix<PpuTile>(tileCountX, tileCountY);
   var pixels = matrix<int>(pixelCountX, pixelCountY);
-  int _scanline = 0;
+  int _scanline;
 
   get _tileY => _scanline >> 3;
+  get _yInTile => _scanline & 0x111;
 
   PPU() {
     for (var j = 0; j < tileCountY; j++) {
@@ -47,39 +48,37 @@ class PPU {
     return mem.read(getBit(reg.ppuctrl, 4) << 12 | addr);
   }
 
-  renderBackground() {}
-
-  renderLine() {
+  renderBackground() {
     for (var _tileX = 0; _tileX < tileCountX; _tileX++) {
-      var tileIndex = _tileY << 4 | _tileX;
+      var tileIndex = mem.nameTables[reg.nameTableIndex][_tileY << 5 | _tileX];
 
-      var offset = reg.bgPatternTableAddr | tileIndex << 4 | _scanline;
-      var low = mem.read(offset);
-      var high = mem.read(offset | 8);
+      var offset = tileIndex << 4 | _yInTile;
+      var low = mem.patternTables[reg.bgPatternTableIndex][offset];
+      var high = mem.patternTables[reg.bgPatternTableIndex][offset | 8];
 
-      var attrAddr = 0x3c0 | _tileY >> 2 << 3 | _tileX >> 2;
-      var attr = mem.read(attrAddr);
+      var attr =
+          mem.attrTables[reg.nameTableIndex][_tileY >> 2 << 3 | _tileX >> 2];
       if (getBitBool(_tileX, 1)) attr >>= 2;
       if (getBitBool(_tileY, 1)) attr >>= 4;
       attr &= 3;
 
-      for (var j = 0; j < _tileSize; j++) {
-        pixels[_tileY << 3 | _scanline][_tileX << 3 | j] =
-            attr << 2 | getBit(high, j) << 1 | getBit(low, j);
+      for (var x = 0; x < _tileSize; x++) {
+        pixels[_tileX << 3 | x][_scanline] =
+            attr << 2 | getBit(high, x) << 1 | getBit(low, x);
       }
     }
-    _scanline++;
   }
 
   render() {
-    // _reg.vblankStarted;
-    for (var j = 0; j < tileCountY; j++) {
-      for (var i = 0; i < tileCountX; i++) {
-        _tiles[i][j].renderBackground();
+    for (_scanline = 0; _scanline < pixelCountY; _scanline++) {
+      if (reg.showBackground) {
+        renderBackground();
+      }
+      if (reg.showSprite) {
+        renderSprite();
       }
     }
-
-    renderSprite();
+    // _reg.vblankStarted;
   }
 
   // getSpritePattern(int index) {
@@ -87,25 +86,27 @@ class PPU {
   // }
 
   renderSprite() {
+    var spriteCount = 0;
     for (var i = 0; i < PpuOam.spriteCount; i++) {
       var info = _oam.getSpriteInfo(i);
 
-      if (!info.front) return;
+      if (_scanline < info.y || info.y + reg.spriteHeight < _scanline) {
+        continue;
+      }
 
-      for (var y = 0; y < 8; y++) {
-        var offset = reg.spritePatternTableAddr | info.tileIndex << 4 | y;
-        var low = mem.read(offset);
-        var high = mem.read(offset | 8);
+      spriteCount++;
+      if (spriteCount > 8) {
+        reg.spriteOverflow = true;
+      }
 
-        var attrAddr = xxx | _tileY >> 2 << 3 | _tileX >> 2;
-        var attr = mem.read(0x3c0 + 1);
-        if (getBitBool(_tileX, 1)) attr >>= 2;
-        if (getBitBool(_tileY, 1)) attr >>= 4;
-        attr &= 3;
+      var offset = info.tileIndex << 4 | _scanline - info.y & 0x111;
+      var low = mem.patternTables[reg.bgPatternTableIndex][offset];
+      var high = mem.patternTables[reg.bgPatternTableIndex][offset | 8];
 
-        for (var x = 0; x < 8; x++) {
-          this._pixels[info.x + x][info.y + y] = 1;
-        }
+      for (var x = info.x; x < _tileSize; x++) {
+        var xInTile = info.x & 0x111;
+        pixels[x][_scanline] =
+            info.attr << 2 | getBit(high, xInTile) << 1 | getBit(low, xInTile);
       }
     }
   }
