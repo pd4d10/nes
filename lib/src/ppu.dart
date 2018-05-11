@@ -30,22 +30,16 @@ class PPU {
     }
   }
 
-  /// Base nametable address
-  ///
-  /// (0 = $2000; 1 = $2400; 2 = $2800; 3 = $2C00)
-  readNameTable(int addr) {
-    return mem.read(0x2000 | (reg.ppuctrl & 3) << 10 | addr);
-  }
-
-  /// Sprite pattern table address for 8x8 sprites
-  ///
-  /// (0: $0000; 1: $1000; ignored in 8x16 mode)
-  readSpritePatternTable(int addr) {
-    return mem.read(getBit(reg.ppuctrl, 3) << 12 | addr);
-  }
-
-  readBackgroundPatternTable(int addr) {
-    return mem.read(getBit(reg.ppuctrl, 4) << 12 | addr);
+  render() {
+    for (_scanline = 0; _scanline < pixelCountY; _scanline++) {
+      if (reg.showBackground) {
+        renderBackground();
+      }
+      if (reg.showSprite) {
+        renderSprite();
+      }
+    }
+    // _reg.vblankStarted;
   }
 
   renderBackground() {
@@ -69,22 +63,6 @@ class PPU {
     }
   }
 
-  render() {
-    for (_scanline = 0; _scanline < pixelCountY; _scanline++) {
-      if (reg.showBackground) {
-        renderBackground();
-      }
-      if (reg.showSprite) {
-        renderSprite();
-      }
-    }
-    // _reg.vblankStarted;
-  }
-
-  // getSpritePattern(int index) {
-  //   var addr = getBit(_reg.ppuctrl, 3) << 12 | index << 2;
-  // }
-
   renderSprite() {
     var spriteCount = 0;
     for (var i = 0; i < PpuOam.spriteCount; i++) {
@@ -99,12 +77,16 @@ class PPU {
         reg.spriteOverflow = true;
       }
 
-      var offset = info.tileIndex << 4 | _scanline - info.y & 0x111;
+      var tmp = _scanline - info.y & 0x111;
+      var yInTile = info.vFlip ? 0x111 - tmp : tmp;
+      var offset = info.tileIndex << 4 | yInTile;
       var low = mem.patternTables[reg.bgPatternTableIndex][offset];
       var high = mem.patternTables[reg.bgPatternTableIndex][offset | 8];
 
+      // TODO: info.front
       for (var x = info.x; x < _tileSize; x++) {
-        var xInTile = info.x & 0x111;
+        var tmp = info.x & 0x111;
+        var xInTile = info.hFlip ? 0x111 - tmp : tmp;
         pixels[x][_scanline] =
             info.attr << 2 | getBit(high, xInTile) << 1 | getBit(low, xInTile);
       }
