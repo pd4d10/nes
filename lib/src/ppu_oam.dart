@@ -8,7 +8,7 @@ class PpuOam {
   List<int> data = new List(0x100);
 
   SpriteInfo getSpriteInfo(int index) {
-    return new SpriteInfo.fromMem(data.getRange(index << 2, index + 1 << 2));
+    return new SpriteInfo.fromMem(data.sublist(index << 2, index + 1 << 2));
   }
 }
 

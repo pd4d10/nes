@@ -13,6 +13,15 @@ class CpuRegister {
 
   int p; // Processor Status
 
+  /// https://wiki.nesdev.com/w/index.php/CPU_power_up_state
+  reset() {
+    a = 0;
+    x = 0;
+    y = 0;
+    pc = 0;
+    p = 0x24;
+  }
+
   _setDataByBit(int n, value) {
     value = (value == 0 || value == false || value == null) ? 0 : 1;
     p = setBit(p, n, value);

@@ -6,8 +6,8 @@ bool getBitBool(int data, int n) {
   return getBit(data, n) == 1;
 }
 
-setBit(int data, int n, int value) {
-  n = 2 << n;
+int setBit(int data, int n, int value) {
+  n = 1 << n;
   if (value != 0) {
     return data | n;
   } else {
@@ -15,14 +15,28 @@ setBit(int data, int n, int value) {
   }
 }
 
-setBitBool(int data, int n, bool b) {
-  setBit(data, n, b ? 1 : 0);
+int setBitBool(int data, int n, bool b) {
+  return setBit(data, n, b ? 1 : 0);
 }
 
-List<List<T>> matrix<T>(int x, int y) {
-  var list = new List(x);
-  for (var i = 0; i < x; i++) {
-    list[i] = new List(y);
+class LinearMemory {
+  List<int> _data;
+  LinearMemory(int length) {
+    _data = new List.filled(length, 0);
   }
-  return list;
+  read(int addr) {
+    return _data[addr];
+  }
+
+  write(int addr, int value) {
+    _data[addr] = value;
+  }
+}
+
+read(List<int> list, int index) {
+  return list[index];
+}
+
+List<List<int>> matrix(int x, int y) {
+  return new List.generate(x, (i) => new List.filled(y, 0));
 }

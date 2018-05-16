@@ -5,24 +5,26 @@ import 'utils.dart';
 class ROM {
   int romCount;
   int vromCount;
-  int mirroring;
-  int hasSaved;
+  bool mirroring;
+  bool hasSaved;
   int trainer;
-  int fourScreen;
+  bool fourScreen;
   int mapperType;
 
   List<List<int>> roms;
   List<List<int>> vroms;
 
-  ROM(List<int> data) {
+  load(List<int> data) {
     romCount = data[4];
     vromCount = data[5];
+    roms = new List(romCount);
+    vroms = new List(vromCount);
 
     var flag6 = data[6];
-    mirroring = getBit(flag6, 0);
-    hasSaved = getBit(flag6, 1);
+    mirroring = getBitBool(flag6, 0);
+    hasSaved = getBitBool(flag6, 1);
     trainer = getBit(flag6, 2);
-    fourScreen = getBit(flag6, 3);
+    fourScreen = getBitBool(flag6, 3);
 
     var flag7 = data[7];
     mapperType = flag6 >> 4 | flag7 & 0xf0;
@@ -32,12 +34,12 @@ class ROM {
     var offset = 16;
     // PRG ROM
     for (var i = 0; i < romCount; i++) {
-      roms[i] = data.getRange(offset, offset + romSize);
+      roms[i] = data.sublist(offset, offset + romSize);
       offset += romSize;
     }
     // CHR ROM
     for (var i = 0; i < vromCount; i++) {
-      vroms[i] = data.getRange(offset, offset + vromSize);
+      vroms[i] = data.sublist(offset, offset + vromSize);
     }
   }
 }

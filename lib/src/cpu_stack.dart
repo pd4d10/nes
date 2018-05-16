@@ -1,16 +1,18 @@
-import 'memory.dart';
+import 'cpu_memory.dart';
 
 /// Stack: Descending, empty, $0100-$01ff
 ///
 /// https://wiki.nesdev.com/w/index.php/Stack
 class CpuStack {
   final _offset = 0x100;
-  Memory _mem;
+  CpuMemory _mem;
   int point;
 
   CpuStack(this._mem);
 
-  reset() => point = 0xff;
+  reset() {
+    point = 0xff;
+  }
 
   push(int value) {
     if (point < 0) {

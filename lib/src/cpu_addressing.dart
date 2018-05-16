@@ -1,56 +1,92 @@
-import 'memory.dart';
+import 'cpu.dart';
+import 'cpu_memory.dart';
 import 'cpu_register.dart';
 
 /// Addressing mode
 // http://wiki.nesdev.com/w/index.php/CPU_addressing_modes
 // http://obelisk.me.uk/6502/addressing.html
 class CpuAddressing {
-  int extraCycle = 0;
-  Memory _mem;
-  CpuRegister _reg;
-  CpuAddressing(this._reg, this._mem);
+  CPU _cpu;
+  CpuAddressing(this._cpu);
 
-  implicit() {}
-  accumulator() => _reg.a;
-  immediate() => _reg.pc + 1;
-  zeroPage() => _mem.read(_reg.pc + 1);
-  zeroPageX() => _mem.read(_reg.pc + 1) + _reg.x & 0xff;
-  zeroPageY() => _mem.read(_reg.pc + 1) + _reg.y & 0xff;
-  absolute() => _mem.read16(_reg.pc + 1);
+  CpuMemory get _mem => _cpu.mem;
+  CpuRegister get _reg => _cpu.reg;
+
+  implicit() {
+    _reg.pc++;
+  }
+
+  accumulator() {
+    _cpu.opAddr = _reg.a;
+    _reg.pc++;
+  }
+
+  immediate() {
+    _cpu.opAddr = ++_reg.pc;
+    _reg.pc++;
+  }
+
+  zeroPage() {
+    _cpu.opAddr = _mem.read(++_reg.pc);
+    _reg.pc++;
+  }
+
+  zeroPageX() {
+    _cpu.opAddr = _mem.read(++_reg.pc) + _reg.x & 0xff;
+    _reg.pc++;
+  }
+
+  zeroPageY() {
+    _cpu.opAddr = _mem.read(++_reg.pc) + _reg.y & 0xff;
+    _reg.pc++;
+  }
+
+  absolute() {
+    _cpu.opAddr = _mem.read16(++_reg.pc);
+    _reg.pc += 2;
+  }
+
   absoluteX() {
-    var addr = _mem.read16(_reg.pc + 1) + _reg.x & 0xffff;
-    if (true) {
-      extraCycle = 1;
+    var addr = _mem.read16(++_reg.pc) + _reg.x & 0xffff;
+    if ((addr >> 8) != (_reg.pc >> 8)) {
+      _cpu.setExtraCycle();
     }
-    return addr;
+    _cpu.opAddr = addr;
   }
 
   absoluteY() {
-    var addr = _mem.read16(_reg.pc + 1) + _reg.y & 0xffff;
-    if (true) {
-      extraCycle = 1;
+    var addr = _mem.read16(++_reg.pc) + _reg.y & 0xffff;
+    if ((addr >> 8) != (_reg.pc >> 8)) {
+      _cpu.setExtraCycle();
     }
-    return addr;
+    _cpu.opAddr = addr;
   }
 
-  indirect() => _mem.read16(_mem.read16(_reg.pc + 1));
-  indirectX() => _mem.read16(_mem.read(_reg.pc + 1) + _reg.x);
+  indirect() {
+    _cpu.opAddr = _mem.read16(_mem.read16(++_reg.pc));
+    _reg.pc += 2;
+  }
+
+  indirectX() {
+    _cpu.opAddr = _mem.read16(_mem.read(++_reg.pc) + _reg.x);
+  }
+
   indirectY() {
-    var addr = _mem.read16(_mem.read(_reg.pc + 1)) + _reg.y & 0xffff;
-    if (true) {
-      extraCycle = 1;
+    var addr = _mem.read16(_mem.read(++_reg.pc)) + _reg.y & 0xffff;
+    if ((addr >> 8) != (_reg.pc >> 8)) {
+      _cpu.setExtraCycle();
     }
-    return addr;
+    _cpu.opAddr = addr;
   }
 
   relative() {
-    var addr = _mem.read(_reg.pc + 1);
+    var addr = _mem.read(++_reg.pc);
     if (addr >= 0x80) {
       addr -= 0x100;
     }
-    if (true) {
-      extraCycle = 1;
+    if ((addr >> 8) != (_reg.pc >> 8)) {
+      _cpu.setExtraCycle();
     }
-    return addr + _reg.pc;
+    _cpu.opAddr = addr + _reg.pc;
   }
 }
