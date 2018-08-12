@@ -8,7 +8,7 @@ class Mappers0 {
   int joy1StrobeState;
   int joy2StrobeState;
   int joypadLastWrite;
-  bool zapperFired;
+  bool zapperFired = false;
   int zapperX;
   int zapperY;
 
@@ -135,9 +135,9 @@ class Mappers0 {
         // Sound+Joypad registers
         switch (address - 0x4015) {
           case 0:
-            // 0x4015:
-            // Sound channel enable, DMC Status
-            return this.nes.papu.readReg(address);
+          // 0x4015:
+          // Sound channel enable, DMC Status
+          // return this.nes.papu.readReg(address);
 
           case 1:
             // 0x4016:
@@ -214,7 +214,7 @@ class Mappers0 {
 
       case 0x4015:
         // Sound Channel Switch, DMC Status
-        this.nes.papu.writeReg(address, value);
+        // this.nes.papu.writeReg(address, value);
         break;
 
       case 0x4016:
@@ -228,14 +228,14 @@ class Mappers0 {
 
       case 0x4017:
         // Sound channel frame sequencer:
-        this.nes.papu.writeReg(address, value);
+        // this.nes.papu.writeReg(address, value);
         break;
 
       default:
         // Sound registers
         // console.log("write to sound reg");
         if (address >= 0x4000 && address <= 0x4017) {
-          this.nes.papu.writeReg(address, value);
+          // this.nes.papu.writeReg(address, value);
         }
     }
   }

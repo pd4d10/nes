@@ -16,7 +16,7 @@ class PPU {
   var dummyCycleToggle = null;
   var validTileData = null;
   var nmiCounter = null;
-  var scanlineAlreadyRendered = null;
+  bool scanlineAlreadyRendered = false;
   var f_nmiOnVblank = null;
   var f_spriteSize = null;
   var f_bgPatternTable = null;
@@ -43,7 +43,7 @@ class PPU {
   var regS = null;
   var curNt = null;
   var attrib = null;
-  var buffer = null;
+  List<int> buffer = null;
   var bgbuffer = null;
   var pixrendered = null;
   // var validTileData = null;
@@ -114,7 +114,7 @@ class PPU {
     this.dummyCycleToggle = false;
     this.validTileData = false;
     this.nmiCounter = 0;
-    this.scanlineAlreadyRendered = null;
+    this.scanlineAlreadyRendered = false;
 
     // Control Flags Register 1:
     this.f_nmiOnVblank = 0; // NMI on VBlank. 0=disable, 1=enable
@@ -953,7 +953,7 @@ class PPU {
               destIndex -= x;
               sx = -x;
             }
-            if (t.opaque[this.cntFV]) {
+            if (t.opaque[this.cntFV] != null) {
               for (; sx < 8; sx++) {
                 targetBuffer[destIndex] =
                     imgPalette[tpix[tscanoffset + sx] + att];
@@ -1132,6 +1132,8 @@ class PPU {
     var tIndexAdd = this.f_spPatternTable == 0 ? 0 : 256;
     var x, y, t, i;
     var bufferIndex;
+
+    if (x == null || y == null) return false;
 
     x = this.sprX[0];
     y = this.sprY[0] + 1;
